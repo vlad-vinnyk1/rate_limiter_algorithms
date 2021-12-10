@@ -1,2 +1,2 @@
-# rate_limiter_algorithms
+# Rate Limiter Algorithms
 Rate Limiter Algorithms implementations
