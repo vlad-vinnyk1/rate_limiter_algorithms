@@ -19,9 +19,7 @@ public class FixedWindowCounterRateLimiter {
     public Response limitFunc(Integer numb, Function1<Integer, Integer> f) {
         resetWindow();
         if (windowCapacity > currentWindowSize.get()) {
-            synchronized (FixedWindowCounterRateLimiter.class) {
-                currentWindowSize.incrementAndGet();
-            }
+            currentWindowSize.incrementAndGet();
 
             return Response.builder()
                     .code(Response.StatusCode.SUCCESS)
@@ -38,11 +36,9 @@ public class FixedWindowCounterRateLimiter {
     private void resetWindow() {
         Instant thisCall = Instant.now();
         long diffInSeconds = Duration.between(lastWindowReset, thisCall).toSeconds();
-        synchronized (FixedWindowCounterRateLimiter.class) {
-            if (windowCapacity <= currentWindowSize.get() && diffInSeconds >= windowRefreshInSec) {
-                currentWindowSize.set(0);
-                lastWindowReset = thisCall;
-            }
+        if (windowCapacity <= currentWindowSize.get() && diffInSeconds >= windowRefreshInSec) {
+            currentWindowSize.set(0);
+            lastWindowReset = thisCall;
         }
     }
 }
