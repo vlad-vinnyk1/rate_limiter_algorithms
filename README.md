@@ -8,3 +8,4 @@ Rate Limiter Algorithms implementations
 Run tests:
  - BucketTokenTest
  - LeakyBucketRateLimiterTest
+ - FixedWindowCounterRateLimiterTest

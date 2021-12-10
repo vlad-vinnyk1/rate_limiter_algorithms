@@ -1,7 +1,6 @@
 package com.example.ratelimiter;
 
 import com.example.ratelimiter.dto.Response;
-import com.example.ratelimiter.dto.StatusCode;
 import io.vavr.Function1;
 import lombok.extern.slf4j.Slf4j;
 
@@ -12,14 +11,10 @@ import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class LeakyBucketRateLimiter {
-    private final int capacity;
-    private final int pollingInterval;
     private final ArrayBlockingQueue<Integer> queue;
     private final ScheduledExecutorService dummyConsumer;
 
     public LeakyBucketRateLimiter(int capacity, int pollingInterval) {
-        this.capacity = capacity;
-        this.pollingInterval = pollingInterval;
         this.queue = new ArrayBlockingQueue<>(capacity);
 
         this.dummyConsumer = new ScheduledThreadPoolExecutor(1);
@@ -31,12 +26,12 @@ public class LeakyBucketRateLimiter {
             queue.add(f.apply(numb));
 
             return Response.builder()
-                    .code(StatusCode.SUCCESS)
+                    .code(Response.StatusCode.SUCCESS)
                     .value(f.apply(numb))
                     .build();
         } else {
             return Response.builder()
-                    .code(StatusCode.ERROR_RATE_EXCEEDED)
+                    .code(Response.StatusCode.ERROR_RATE_EXCEEDED)
                     .value(numb)
                     .build();
         }
@@ -49,6 +44,5 @@ public class LeakyBucketRateLimiter {
         } else {
             log.info("The queue is empty, waiting polling interval");
         }
-
     }
 }

@@ -1,7 +1,6 @@
 package com.example.ratelimiter;
 
 import com.example.ratelimiter.dto.Response;
-import com.example.ratelimiter.dto.StatusCode;
 import io.vavr.Function1;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
@@ -15,8 +14,8 @@ public class BucketTokenRateLimiter {
     private final int refillRateInSeconds;
     private final int numberToRefill;
 
-    private long occupied;
-    private Instant lastRefill = Instant.now();
+    private volatile long occupied;
+    private volatile Instant lastRefill = Instant.now();
 
     public Response limitFunc(Integer numb, Function1<Integer, Integer> f) {
         refillIfNeeded();
@@ -26,12 +25,12 @@ public class BucketTokenRateLimiter {
             }
 
             return Response.builder()
-                    .code(StatusCode.SUCCESS)
+                    .code(Response.StatusCode.SUCCESS)
                     .value(f.apply(numb))
                     .build();
         } else {
             return Response.builder()
-                    .code(StatusCode.ERROR_RATE_EXCEEDED)
+                    .code(Response.StatusCode.ERROR_RATE_EXCEEDED)
                     .value(numb)
                     .build();
         }

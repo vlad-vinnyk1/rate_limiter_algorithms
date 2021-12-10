@@ -8,4 +8,9 @@ import lombok.Data;
 public class Response {
     private StatusCode code;
     private int value;
+
+    public static enum StatusCode {
+        SUCCESS,
+        ERROR_RATE_EXCEEDED
+    }
 }
