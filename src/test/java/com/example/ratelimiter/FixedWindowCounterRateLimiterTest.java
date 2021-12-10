@@ -9,13 +9,14 @@ import java.util.concurrent.Executors;
 
 import static com.example.ratelimiter.utils.TestUtils.sleepInSec;
 
+// Can see bottleneck of the algo: 6 first are allowed, then expected distribution: 4rps = 3 allow and 1 rejected.
 @Slf4j
 public class FixedWindowCounterRateLimiterTest {
     @Test
     public void testBucketTokenTest() {
-        val leaky = new FixedWindowCounterRateLimiter(10, 1);
-        for (int i = 1; i < 200; i++) {
-            sleepInSec(0.01);
+        val leaky = new FixedWindowCounterRateLimiter(3, 1);
+        for (int i = 1; i < 33; i++) {
+            sleepInSec(0.25);
             int finalI = i;
             Executors.newSingleThreadExecutor().submit(
                     () -> log.info(leaky.limitFunc(finalI, Function1.identity()).toString())

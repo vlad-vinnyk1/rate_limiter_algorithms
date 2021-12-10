@@ -7,6 +7,7 @@ import lombok.val;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.concurrent.atomic.AtomicLong;
 
 @RequiredArgsConstructor
 public class BucketTokenRateLimiter {
@@ -14,15 +15,13 @@ public class BucketTokenRateLimiter {
     private final int refillRateInSeconds;
     private final int numberToRefill;
 
-    private volatile long occupied;
+    private final AtomicLong occupied = new AtomicLong();
     private volatile Instant lastRefill = Instant.now();
 
     public Response limitFunc(Integer numb, Function1<Integer, Integer> f) {
         refillIfNeeded();
-        if (capacity > occupied) {
-            synchronized (BucketTokenRateLimiter.class) {
-                occupied++;
-            }
+        if (capacity > occupied.get()) {
+            occupied.incrementAndGet();
 
             return Response.builder()
                     .code(Response.StatusCode.SUCCESS)
@@ -38,16 +37,15 @@ public class BucketTokenRateLimiter {
     }
 
     private void refillIfNeeded() {
-        if (occupied >= capacity) {
+        if (occupied.get() >= capacity) {
             val thisCall = Instant.now();
-            synchronized (BucketTokenRateLimiter.class) {
-                long diffInSeconds = Duration.between(lastRefill, thisCall).toSeconds();
-                long tokensToRefill = (diffInSeconds / refillRateInSeconds) * numberToRefill;
-                if (tokensToRefill > 0) {
-                    occupied = tokensToRefill >= occupied ? 0 : occupied - tokensToRefill;
-                    lastRefill = thisCall;
-                }
+            long diffInSeconds = Duration.between(lastRefill, thisCall).toSeconds();
+            long tokensToRefill = (diffInSeconds / refillRateInSeconds) * numberToRefill;
+            if (tokensToRefill > 0) {
+                occupied.set(tokensToRefill >= occupied.get() ? 0 : occupied.get() - tokensToRefill);
+                lastRefill = thisCall;
             }
+
         }
     }
 }

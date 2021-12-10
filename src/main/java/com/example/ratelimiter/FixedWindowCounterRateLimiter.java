@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @RequiredArgsConstructor
 public class FixedWindowCounterRateLimiter {
@@ -13,13 +14,13 @@ public class FixedWindowCounterRateLimiter {
     private final int windowRefreshInSec;
     private Instant lastWindowReset = Instant.now();
 
-    private volatile int currentWindowSize;
+    private volatile AtomicInteger currentWindowSize = new AtomicInteger();
 
     public Response limitFunc(Integer numb, Function1<Integer, Integer> f) {
         resetWindow();
-        if (windowCapacity > currentWindowSize) {
+        if (windowCapacity > currentWindowSize.get()) {
             synchronized (FixedWindowCounterRateLimiter.class) {
-                currentWindowSize++;
+                currentWindowSize.incrementAndGet();
             }
 
             return Response.builder()
@@ -38,8 +39,8 @@ public class FixedWindowCounterRateLimiter {
         Instant thisCall = Instant.now();
         long diffInSeconds = Duration.between(lastWindowReset, thisCall).toSeconds();
         synchronized (FixedWindowCounterRateLimiter.class) {
-            if (windowCapacity <= currentWindowSize && diffInSeconds >= windowRefreshInSec) {
-                currentWindowSize = 0;
+            if (windowCapacity <= currentWindowSize.get() && diffInSeconds >= windowRefreshInSec) {
+                currentWindowSize.set(0);
                 lastWindowReset = thisCall;
             }
         }

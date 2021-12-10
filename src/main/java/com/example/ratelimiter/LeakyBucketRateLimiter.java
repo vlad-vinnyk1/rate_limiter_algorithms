@@ -11,19 +11,20 @@ import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class LeakyBucketRateLimiter {
+    private static final String QUEUE_EMPTY_WARN = "The queue is empty, waiting polling interval";
+    private static final String RECORD_CONSUMED_MSG_TMP = "Consumed %s";
     private final ArrayBlockingQueue<Integer> queue;
-    private final ScheduledExecutorService dummyConsumer;
 
     public LeakyBucketRateLimiter(int capacity, int pollingInterval) {
         this.queue = new ArrayBlockingQueue<>(capacity);
 
-        this.dummyConsumer = new ScheduledThreadPoolExecutor(1);
-        this.dummyConsumer.scheduleAtFixedRate(this::someDummyPollLogic, 0, pollingInterval, TimeUnit.SECONDS);
+        ScheduledExecutorService dummyConsumer = new ScheduledThreadPoolExecutor(1);
+        dummyConsumer.scheduleAtFixedRate(this::someDummyPollLogic, 0, pollingInterval, TimeUnit.SECONDS);
     }
 
     public Response limitFunc(Integer numb, Function1<Integer, Integer> f) {
         if (queue.remainingCapacity() > 0) {
-            queue.add(f.apply(numb));
+            queue.add(numb);
 
             return Response.builder()
                     .code(Response.StatusCode.SUCCESS)
@@ -40,9 +41,9 @@ public class LeakyBucketRateLimiter {
 
     private void someDummyPollLogic() {
         if (!queue.isEmpty()) {
-            log.info("Consumed " + queue.poll());
+            log.info(String.format(RECORD_CONSUMED_MSG_TMP, queue.poll()));
         } else {
-            log.info("The queue is empty, waiting polling interval");
+            log.warn(QUEUE_EMPTY_WARN);
         }
     }
 }
