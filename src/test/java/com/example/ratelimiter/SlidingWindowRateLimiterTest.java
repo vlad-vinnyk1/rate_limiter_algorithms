@@ -10,15 +10,16 @@ import java.util.concurrent.Executors;
 import static com.example.ratelimiter.utils.TestUtils.sleepInSec;
 
 @Slf4j
-public class FixedWindowCounterRateLimiterTest {
+public class SlidingWindowRateLimiterTest {
+
     @Test
-    public void testFixedSizedWindowCounter() {
-        val leaky = new FixedWindowCounterRateLimiter(3, 1);
-        for (int i = 1; i < 33; i++) {
-            sleepInSec(0.25);
+    public void testSlidingWindowRateLimiter() {
+        val slidingWindow = new SlidingWindowRateLimiter(2, 5);
+        for (int i = 1; i < 32; i++) {
+            sleepInSec(0.5);
             int finalI = i;
             Executors.newSingleThreadExecutor().submit(
-                    () -> log.info(leaky.limitFunc(finalI, Function1.identity()).toString())
+                    () -> log.info(slidingWindow.limitFunc(finalI, Function1.identity()).toString())
             );
         }
     }

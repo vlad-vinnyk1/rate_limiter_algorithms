@@ -15,8 +15,8 @@ public class BucketTokenTest {
     @Test
     public void testBucketTokenTest() {
         val token = new BucketTokenRateLimiter(3, 1, 1);
-        for (int i = -2; i < 31; i++) {
-            sleepInSec(0.2);
+        for (int i = 0; i < 33; i++) {
+            sleepInSec(0.25);
             int finalI = i;
             Executors.newSingleThreadExecutor().submit(
                     () -> log.info(token.limitFunc(finalI, Function1.identity()).toString())
