@@ -1,6 +1,7 @@
 package com.example.ratelimiter;
 
 import com.example.ratelimiter.dto.Response;
+import com.example.ratelimiter.dto.ResponseUtils;
 import io.vavr.Function1;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
@@ -22,30 +23,30 @@ public class BucketTokenRateLimiter {
         refillIfNeeded();
         if (capacity > occupied.get()) {
             occupied.incrementAndGet();
-
-            return Response.builder()
-                    .code(Response.StatusCode.SUCCESS)
-                    .value(f.apply(numb))
-                    .build();
+            return ResponseUtils.toResponse(Response.StatusCode.SUCCESS, f.apply(numb));
         } else {
-            return Response.builder()
-                    .code(Response.StatusCode.ERROR_RATE_EXCEEDED)
-                    .value(numb)
-                    .build();
+            return ResponseUtils.toResponse(Response.StatusCode.ERROR_RATE_EXCEEDED, numb);
         }
 
     }
 
     private void refillIfNeeded() {
-        if (occupied.get() >= capacity) {
-            val thisCall = Instant.now();
-            long diffInSeconds = Duration.between(lastRefill, thisCall).toSeconds();
-            long tokensToRefill = (diffInSeconds / refillRateInSeconds) * numberToRefill;
+        if (isCapacityExceeded()) {
+            val thisRequest = Instant.now();
+            long tokensToRefill = calculateTokensToRefill(thisRequest);
             if (tokensToRefill > 0) {
                 occupied.set(tokensToRefill >= occupied.get() ? 0 : occupied.get() - tokensToRefill);
-                lastRefill = thisCall;
+                lastRefill = thisRequest;
             }
-
         }
+    }
+
+    private boolean isCapacityExceeded() {
+        return occupied.get() >= capacity;
+    }
+
+    private long calculateTokensToRefill(Instant thisCall) {
+        long diffInSeconds = Duration.between(lastRefill, thisCall).toSeconds();
+        return (diffInSeconds / refillRateInSeconds) * numberToRefill;
     }
 }

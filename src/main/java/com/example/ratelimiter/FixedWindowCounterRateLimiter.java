@@ -1,6 +1,7 @@
 package com.example.ratelimiter;
 
 import com.example.ratelimiter.dto.Response;
+import com.example.ratelimiter.dto.ResponseUtils;
 import io.vavr.Function1;
 import lombok.RequiredArgsConstructor;
 
@@ -11,34 +12,35 @@ import java.util.concurrent.atomic.AtomicInteger;
 @RequiredArgsConstructor
 public class FixedWindowCounterRateLimiter {
     private final int windowCapacity;
-    private final int windowRefreshInSec;
+    private final int windowRefreshRateInSeconds;
     private Instant lastWindowReset = Instant.now();
 
-    private volatile AtomicInteger currentWindowSize = new AtomicInteger();
+    private final AtomicInteger currentWindowCounter = new AtomicInteger();
 
-    public Response limitFunc(Integer numb, Function1<Integer, Integer> f) {
+    public Response rateLimitFunc(Integer numb, Function1<Integer, Integer> f) {
         resetWindow();
-        if (windowCapacity > currentWindowSize.get()) {
-            currentWindowSize.incrementAndGet();
-
-            return Response.builder()
-                    .code(Response.StatusCode.SUCCESS)
-                    .value(f.apply(numb))
-                    .build();
+        if (windowCapacity > currentWindowCounter.get()) {
+            currentWindowCounter.incrementAndGet();
+            return ResponseUtils.toResponse(Response.StatusCode.SUCCESS, f.apply(numb));
         } else {
-            return Response.builder()
-                    .code(Response.StatusCode.ERROR_RATE_EXCEEDED)
-                    .value(numb)
-                    .build();
+            return ResponseUtils.toResponse(Response.StatusCode.ERROR_RATE_EXCEEDED, numb);
         }
     }
 
     private void resetWindow() {
-        Instant thisCall = Instant.now();
-        long diffInSeconds = Duration.between(lastWindowReset, thisCall).toSeconds();
-        if (windowCapacity <= currentWindowSize.get() && diffInSeconds >= windowRefreshInSec) {
-            currentWindowSize.set(0);
-            lastWindowReset = thisCall;
+        Instant currentRequest = Instant.now();
+        if (isCapacityExceeded() && isTimeToReset(currentRequest)) {
+            currentWindowCounter.set(0);
+            lastWindowReset = currentRequest;
         }
+    }
+
+    private boolean isTimeToReset(Instant currentRequest) {
+        long lastResetAndCurrentRequestDif = Duration.between(lastWindowReset, currentRequest).toSeconds();
+        return lastResetAndCurrentRequestDif >= windowRefreshRateInSeconds;
+    }
+
+    private boolean isCapacityExceeded() {
+        return windowCapacity <= currentWindowCounter.get();
     }
 }

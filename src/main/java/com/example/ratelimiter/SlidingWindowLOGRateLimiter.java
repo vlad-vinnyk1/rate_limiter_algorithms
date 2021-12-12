@@ -1,6 +1,7 @@
 package com.example.ratelimiter;
 
 import com.example.ratelimiter.dto.Response;
+import com.example.ratelimiter.dto.ResponseUtils;
 import io.vavr.Function1;
 import lombok.RequiredArgsConstructor;
 
@@ -10,7 +11,7 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 @RequiredArgsConstructor
-public class SlidingWindowRateLimiter {
+public class SlidingWindowLOGRateLimiter {
     private final int capacity;
     private final int windowSizeSec;
     private volatile SortedSet<Instant> requests = Collections.synchronizedSortedSet(new TreeSet<>());
@@ -20,15 +21,9 @@ public class SlidingWindowRateLimiter {
         leaveWithinWindow(thisRequestTime);
         if (capacity > requests.size()) {
             requests.add(thisRequestTime);
-            return Response.builder()
-                    .code(Response.StatusCode.SUCCESS)
-                    .value(f.apply(numb))
-                    .build();
+            return ResponseUtils.toResponse(Response.StatusCode.SUCCESS, f.apply(numb));
         } else {
-            return Response.builder()
-                    .code(Response.StatusCode.ERROR_RATE_EXCEEDED)
-                    .value(numb)
-                    .build();
+            return ResponseUtils.toResponse(Response.StatusCode.ERROR_RATE_EXCEEDED, numb);
         }
     }
 

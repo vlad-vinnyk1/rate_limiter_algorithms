@@ -18,7 +18,7 @@ public class FixedWindowCounterRateLimiterTest {
             sleepInSec(0.25);
             int finalI = i;
             Executors.newSingleThreadExecutor().submit(
-                    () -> log.info(leaky.limitFunc(finalI, Function1.identity()).toString())
+                    () -> log.info(leaky.rateLimitFunc(finalI, Function1.identity()).toString())
             );
         }
     }
