@@ -1,7 +1,6 @@
 package com.example.ratelimiter;
 
 import com.example.ratelimiter.dto.Response;
-import com.example.ratelimiter.dto.ResponseUtils;
 import io.vavr.Function1;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
@@ -9,6 +8,9 @@ import lombok.val;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.concurrent.atomic.AtomicLong;
+
+import static com.example.ratelimiter.dto.Response.StatusCode.ERROR_RATE_EXCEEDED;
+import static com.example.ratelimiter.dto.Response.StatusCode.SUCCESS;
 
 @RequiredArgsConstructor
 public class BucketTokenRateLimiter {
@@ -20,17 +22,17 @@ public class BucketTokenRateLimiter {
     private volatile Instant lastRefill = Instant.now();
 
     public Response limitFunc(Integer numb, Function1<Integer, Integer> f) {
-        refillIfNeeded();
+        refillIfCapacityExceeded();
         if (capacity > occupied.get()) {
             occupied.incrementAndGet();
-            return ResponseUtils.toResponse(Response.StatusCode.SUCCESS, f.apply(numb));
+            return new Response(SUCCESS, f.apply(numb));
         } else {
-            return ResponseUtils.toResponse(Response.StatusCode.ERROR_RATE_EXCEEDED, numb);
+            return new Response(ERROR_RATE_EXCEEDED, numb);
         }
 
     }
 
-    private void refillIfNeeded() {
+    private void refillIfCapacityExceeded() {
         if (isCapacityExceeded()) {
             val thisRequest = Instant.now();
             long tokensToRefill = calculateTokensToRefill(thisRequest);

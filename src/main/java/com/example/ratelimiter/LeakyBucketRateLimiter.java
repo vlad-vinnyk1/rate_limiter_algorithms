@@ -1,7 +1,6 @@
 package com.example.ratelimiter;
 
 import com.example.ratelimiter.dto.Response;
-import com.example.ratelimiter.dto.ResponseUtils;
 import io.vavr.Function1;
 import lombok.extern.slf4j.Slf4j;
 
@@ -9,6 +8,8 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+
+import static com.example.ratelimiter.dto.Response.StatusCode.*;
 
 @Slf4j
 public class LeakyBucketRateLimiter {
@@ -24,9 +25,9 @@ public class LeakyBucketRateLimiter {
     public Response limitFunc(Integer numb, Function1<Integer, Integer> f) {
         if (queue.remainingCapacity() > 0) {
             queue.add(numb);
-            return ResponseUtils.toResponse(Response.StatusCode.SUCCESS, f.apply(numb));
+            return new Response(SUCCESS, f.apply(numb));
         } else {
-            return ResponseUtils.toResponse(Response.StatusCode.ERROR_RATE_EXCEEDED, numb);
+            return new Response(ERROR_RATE_EXCEEDED, numb);
         }
     }
 

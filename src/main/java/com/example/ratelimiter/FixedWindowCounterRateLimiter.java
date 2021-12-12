@@ -1,13 +1,14 @@
 package com.example.ratelimiter;
 
 import com.example.ratelimiter.dto.Response;
-import com.example.ratelimiter.dto.ResponseUtils;
 import io.vavr.Function1;
 import lombok.RequiredArgsConstructor;
 
 import java.time.Duration;
 import java.time.Instant;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import static com.example.ratelimiter.dto.Response.StatusCode.*;
 
 @RequiredArgsConstructor
 public class FixedWindowCounterRateLimiter {
@@ -21,9 +22,9 @@ public class FixedWindowCounterRateLimiter {
         resetWindow();
         if (windowCapacity > currentWindowCounter.get()) {
             currentWindowCounter.incrementAndGet();
-            return ResponseUtils.toResponse(Response.StatusCode.SUCCESS, f.apply(numb));
+            return new Response(SUCCESS, f.apply(numb));
         } else {
-            return ResponseUtils.toResponse(Response.StatusCode.ERROR_RATE_EXCEEDED, numb);
+            return new Response(ERROR_RATE_EXCEEDED, numb);
         }
     }
 
