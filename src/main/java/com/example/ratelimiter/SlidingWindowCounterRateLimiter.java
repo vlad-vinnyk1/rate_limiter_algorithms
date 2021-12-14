@@ -24,6 +24,9 @@ public class SlidingWindowCounterRateLimiter {
     private volatile SortedSet<Instant> requests = Collections.synchronizedSortedSet(new TreeSet<>());
 
     public SlidingWindowCounterRateLimiter(int capacity, int windowSizeSec) {
+        if (windowSizeSec <= 1) {
+            throw new IllegalArgumentException("Window size should be greater than 1");
+        }
         this.windowSizeSec = windowSizeSec;
         this.capacity = capacity;
         firstWindow = Instant.now();
