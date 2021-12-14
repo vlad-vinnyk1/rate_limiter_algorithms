@@ -10,11 +10,11 @@ import java.util.concurrent.Executors;
 import static com.example.ratelimiter.utils.TestUtils.sleepInSec;
 
 @Slf4j
-public class SlidingWindowRateLOGLimiterTest {
+public class SlidingWindowRateLogLimiterTest {
 
     @Test
     public void testSlidingWindowRateLimiter() {
-        val slidingWindow = new SlidingWindowLOGRateLimiter(2, 5);
+        val slidingWindow = new SlidingWindowLogRateLimiter(2, 5);
         for (int i = 1; i < 32; i++) {
             sleepInSec(0.5);
             int finalI = i;

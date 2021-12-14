@@ -1,6 +1,6 @@
 # Rate Limiter Algorithms
 
-Rate Limiter Algorithms implementations
+Rate Limiter Algorithms Implementations
 
 - Token-Bucket
 - Leaky-Bucket
@@ -15,3 +15,4 @@ Run tests:
 - LeakyBucketRateLimiterTest
 - FixedWindowCounterRateLimiterTest
 - SlidingWindowRateLimiterTest
+- SlidingWindowCounterRateLimiterTest

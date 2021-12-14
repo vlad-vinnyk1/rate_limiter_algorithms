@@ -12,7 +12,7 @@ import java.util.TreeSet;
 import static com.example.ratelimiter.dto.Response.StatusCode.*;
 
 @RequiredArgsConstructor
-public class SlidingWindowLOGRateLimiter {
+public class SlidingWindowLogRateLimiter {
     private final int capacity;
     private final int windowSizeSec;
     private volatile SortedSet<Instant> requests = Collections.synchronizedSortedSet(new TreeSet<>());

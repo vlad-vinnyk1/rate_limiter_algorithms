@@ -32,17 +32,21 @@ public class SlidingWindowCounterRateLimiter {
     public Response limitFunc(Integer numb, Function1<Integer, Integer> f) {
         Instant thisRequestTime = Instant.now();
         long count;
-        if (thisRequestTime.getEpochSecond() - firstWindow.getEpochSecond() <= windowSizeSec) {
+        if (isStillInFirstWindow(thisRequestTime)) {
             count = requests.tailSet(firstWindow).size();
         } else {
-            long partition = partition(thisRequestTime);
-            long prevWindowPercent = 100 - ((100 * partition) / windowSizeSec);
-            Instant thisWindowStart = Instant.ofEpochSecond(thisRequestTime.getEpochSecond() - partition);
+            long secondsFromWindowStart = toSecondsFromWindowStart(thisRequestTime);
+
+            Instant thisWindowStart = Instant.ofEpochSecond(thisRequestTime.getEpochSecond() - secondsFromWindowStart);
             Instant prevWindowStart = Instant.ofEpochSecond(thisWindowStart.getEpochSecond() - windowSizeSec);
-            shrink(prevWindowStart);
-            int previousRequestsCount = requests.subSet(prevWindowStart, thisWindowStart).size();
-            int thisRequestsCount = requests.tailSet(thisWindowStart).size();
-            count = (previousRequestsCount * prevWindowPercent) / 100 + thisRequestsCount;
+
+            int thisWindowRequestsCount = requests.tailSet(thisWindowStart).size();
+            int prevWindowRequestsCount = requests.subSet(prevWindowStart, thisWindowStart).size();
+
+            long prevRequestCountAdjusted = adjustRequestCount(prevWindowRequestsCount, secondsFromWindowStart);
+            count = prevRequestCountAdjusted + thisWindowRequestsCount;
+
+            shrinkOutdated(prevWindowStart);
         }
 
         if (count >= capacity) {
@@ -53,14 +57,22 @@ public class SlidingWindowCounterRateLimiter {
         }
     }
 
-    private void shrink(Instant prevWindowStart) {
+    private long adjustRequestCount(int requestCount, long secFromWindowStart) {
+        long percentsToTake = 100 - ((100 * secFromWindowStart) / windowSizeSec);
+        return (requestCount * percentsToTake) / 100;
+    }
+
+    private boolean isStillInFirstWindow(Instant thisRequestTime) {
+        return Duration.between(firstWindow, thisRequestTime).getSeconds() <= windowSizeSec;
+    }
+
+    private void shrinkOutdated(Instant prevWindowStart) {
         SortedSet<Instant> withinWindow = requests.tailSet(prevWindowStart);
         requests = Collections.synchronizedSortedSet(withinWindow);
     }
 
-    private synchronized long partition(Instant thisRequestTime) {
-        long diffInSeconds = Duration.between(firstWindow, thisRequestTime).toSeconds();
-        return diffInSeconds % windowSizeSec;
+    private synchronized long toSecondsFromWindowStart(Instant thisRequestTime) {
+        return Duration.between(firstWindow, thisRequestTime).toSeconds() % windowSizeSec;
     }
 
 }

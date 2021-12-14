@@ -12,7 +12,7 @@ import static com.example.ratelimiter.utils.TestUtils.sleepInSec;
 public class SlidingWindowCounterRateLimiterTest {
     public static void main(String[] args) {
         val slidingWindow = new SlidingWindowCounterRateLimiter(7, 10);
-        for (int i = 1; i < 21; i++) {
+        for (int i = 1; i < 32; i++) {
             sleepInSec(1);
             int finalI = i;
             Executors.newSingleThreadExecutor().submit(
