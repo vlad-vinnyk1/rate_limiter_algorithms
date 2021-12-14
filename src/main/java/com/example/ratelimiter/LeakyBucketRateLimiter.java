@@ -17,7 +17,6 @@ public class LeakyBucketRateLimiter {
 
     public LeakyBucketRateLimiter(int capacity, int pollingInterval) {
         this.queue = new ArrayBlockingQueue<>(capacity);
-
         ScheduledExecutorService dummyConsumer = new ScheduledThreadPoolExecutor(1);
         dummyConsumer.scheduleAtFixedRate(this::someDummyPollLogic, 0, pollingInterval, TimeUnit.SECONDS);
     }

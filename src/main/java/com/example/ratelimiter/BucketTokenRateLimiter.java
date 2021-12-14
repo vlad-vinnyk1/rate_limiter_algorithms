@@ -29,7 +29,6 @@ public class BucketTokenRateLimiter {
         } else {
             return new Response(ERROR_RATE_EXCEEDED, numb);
         }
-
     }
 
     private void refillIfCapacityExceeded() {
