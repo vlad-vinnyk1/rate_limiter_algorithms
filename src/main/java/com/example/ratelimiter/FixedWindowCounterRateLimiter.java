@@ -13,7 +13,7 @@ import static com.example.ratelimiter.dto.Response.StatusCode.*;
 @RequiredArgsConstructor
 public class FixedWindowCounterRateLimiter {
     private final int windowCapacity;
-    private final int windowRefreshRateInSeconds;
+    private final int windowRefreshRateSec;
     private Instant lastWindowReset = Instant.now();
 
     private final AtomicInteger currentWindowCounter = new AtomicInteger();
@@ -38,7 +38,7 @@ public class FixedWindowCounterRateLimiter {
 
     private boolean isTimeToReset(Instant currentRequest) {
         long lastResetAndCurrentRequestDif = Duration.between(lastWindowReset, currentRequest).toSeconds();
-        return lastResetAndCurrentRequestDif >= windowRefreshRateInSeconds;
+        return lastResetAndCurrentRequestDif >= windowRefreshRateSec;
     }
 
     private boolean isCapacityExceeded() {

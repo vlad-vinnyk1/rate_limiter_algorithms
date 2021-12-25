@@ -19,7 +19,7 @@ public class SlidingWindowLogRateLimiter {
 
     public Response limitFunc(Integer numb, Function1<Integer, Integer> f) {
         Instant thisRequestTime = Instant.now();
-        leaveWithinWindow(thisRequestTime);
+        cleanupOutdated(thisRequestTime);
         if (capacity > requests.size()) {
             requests.add(thisRequestTime);
             return new Response(SUCCESS, f.apply(numb));
@@ -28,7 +28,7 @@ public class SlidingWindowLogRateLimiter {
         }
     }
 
-    private synchronized void leaveWithinWindow(Instant thisRequestTime) {
+    private synchronized void cleanupOutdated(Instant thisRequestTime) {
         SortedSet<Instant> withinWindow = requests.tailSet(thisRequestTime.minusSeconds(windowSizeSec));
         requests = Collections.synchronizedSortedSet(withinWindow);
     }
