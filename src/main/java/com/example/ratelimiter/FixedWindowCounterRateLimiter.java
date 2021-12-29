@@ -24,7 +24,7 @@ public class FixedWindowCounterRateLimiter {
             currentWindowCounter.incrementAndGet();
             return new Response(SUCCESS, f.apply(numb));
         } else {
-            return new Response(ERROR_RATE_EXCEEDED, numb);
+            return new Response(ERROR_RATE_EXCEEDED, null);
         }
     }
 

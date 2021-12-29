@@ -49,14 +49,14 @@ public class SlidingWindowCounterRateLimiter {
             long prevRequestCountAdjusted = adjustRequestCount(prevWindowRequestsCount, secondsFromWindowStart);
             count = prevRequestCountAdjusted + thisWindowRequestsCount;
 
-            clenupOutdated(prevWindowStart);
+            cleanupOutdated(prevWindowStart);
         }
 
-        if (count >= capacity) {
-            return new Response(ERROR_RATE_EXCEEDED, numb);
-        } else {
+        if (count < capacity) {
             requests.add(thisRequestTime);
             return new Response(SUCCESS, f.apply(numb));
+        } else {
+            return new Response(ERROR_RATE_EXCEEDED, null);
         }
     }
 
@@ -64,7 +64,7 @@ public class SlidingWindowCounterRateLimiter {
         return Duration.between(firstWindow, thisRequestTime).getSeconds() <= windowSizeSec;
     }
 
-    private synchronized long toSecondsFromWindowStart(Instant thisRequestTime) {
+    private long toSecondsFromWindowStart(Instant thisRequestTime) {
         return Duration.between(firstWindow, thisRequestTime).toSeconds() % windowSizeSec;
     }
 
@@ -73,7 +73,7 @@ public class SlidingWindowCounterRateLimiter {
         return (requestCount * percentsToTake) / 100;
     }
 
-    private void clenupOutdated(Instant prevWindowStart) {
+    private synchronized void cleanupOutdated(Instant prevWindowStart) {
         SortedSet<Instant> withinWindow = requests.tailSet(prevWindowStart);
         requests = Collections.synchronizedSortedSet(withinWindow);
     }

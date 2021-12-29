@@ -8,9 +8,9 @@ import lombok.Data;
 @Data
 public class Response {
     private StatusCode code;
-    private int value;
+    private Integer value;
 
-    public static enum StatusCode {
+    public enum StatusCode {
         SUCCESS,
         ERROR_RATE_EXCEEDED
     }
